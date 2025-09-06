@@ -1,0 +1,93 @@
+    <!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Merci pour votre réservation</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 50px;
+      background-color: #fff;
+    }
+    img {
+      width: 180px;
+      margin-bottom: 20px;
+    }
+    h1 {
+      font-size: 24px;
+      color: #444;
+    }
+    p {
+      font-size: 16px;
+      color: #666;
+    }
+    .btn-retour {
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: bold;
+      background-color: #d4af37;
+      color: #000;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      transition: background-color 0.3s ease;
+      margin-top: 30px;
+    }
+    .btn-retour:hover {
+      background-color: #c19e2b;
+    }
+    .logo-animated {
+     opacity: 0;
+     transform: scale(0.8);
+     animation: fadeZoom 1.2s ease-out forwards;
+    }
+
+  @keyframes fadeZoom {
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+  }
+  .btn-retour {
+  opacity: 0;
+  transform: translateY(30px);
+  animation: slideFadeIn 1.2s ease-out 1.2s forwards;
+}
+
+@keyframes slideFadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+  </style>
+</head>
+<body>
+  <img src="images/logo-mk.png" alt="MK Beauty & Hair" class="logo-animated" />
+  <h1>Merci pour votre réservation 💇‍♀️</h1>
+  <p>Nous avons bien reçu votre demande.<br>Un message de confirmation vous sera envoyé !</p>
+  <p id="messageHeure" style="font-style: italic; color: #555;"></p>
+
+  <a href="index.html">
+    <button class="btn-retour">🔙 Retour à l’accueil</button>
+  </a>
+  <script>
+  // Exemple : récupérer l'heure depuis le stockage local ou une variable
+  const heure = localStorage.getItem("heureReservation"); // ex: "14:30"
+
+  function getMessagePersonnalise(heure) {
+    const h = parseInt(heure.split(":")[0]);
+    if (h >= 6 && h < 11) return "☀️ Un bon début de journée vous attend chez MK Beauty & Hair.";
+    if (h >= 11 && h < 14) return "🍽️ Une pause beauté bien méritée !";
+    if (h >= 14 && h < 18) return "✨ L’après-midi sera radieuse…";
+    if (h >= 18 && h < 21) return "🌙 Une touche de glamour pour finir la journée.";
+    return "🌌 Votre rendez-vous est bien enregistré. Reposez-vous bien.";
+  }
+
+  const message = getMessagePersonnalise(heure);
+  document.getElementById("messageHeure").textContent = message;
+</script>
+</body>
+</html>

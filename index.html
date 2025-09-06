@@ -1,0 +1,166 @@
+ <!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Réservation – Salon Mireille Beauté</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h1>💇‍♀️ Réservez votre moment beauté</h1>
+
+  <label for="date">📅 Choisissez une date :</label>
+  <input type="date" id="date" onchange="loadSlots()" min="">
+
+  <div id="slots"></div>
+
+  <form id="clientForm" onsubmit="submitForm(event)">
+    <label for="clientName">👤 Votre nom :</label>
+    <input type="text" id="clientName" required oninput="updateRecap()" />
+
+    <label for="clientPhone">📞 Téléphone (+1...):</label>
+    <div class="phone-group">
+      <input type="text" value="+1" disabled class="prefix" />
+      <input type="tel" id="clientPhone" placeholder="1234567890" required class="number" oninput="updateRecap()" />
+    </div>
+
+    <label for="coiffureType">💇‍♀️ Type de coiffure :</label>
+    <select id="coiffureType" required onchange="updateRecap()">
+      <option value="">-- Sélectionnez --</option>
+      <option value="Brushing">Brushing</option>
+      <option value="Coloration">Coloration</option>
+      <option value="Tresses">Tresses</option>
+      <option value="Extensions">Extensions</option>
+      <option value="Soins capillaires">Soins capillaires</option>
+      <option value="Coiffure événementielle">Coiffure événementielle</option>
+      <option value="Perruques">Perruques</option>
+    </select>
+
+    <div id="recapitulatif">
+      <strong>📋 Récapitulatif :</strong>
+      <p id="recapText"></p>
+    </div>
+
+    <button type="submit">✅ Confirmer le rendez-vous</button>
+  </form>
+
+  <script>
+    let allSlots = [];
+    let selectedDate = "";
+    let selectedTime = "";
+
+    async function loadSlots() {
+      selectedDate = document.getElementById("date").value;
+      selectedTime = "";
+      document.getElementById("clientForm").style.display = "none";
+      document.getElementById("recapitulatif").style.display = "none";
+      const container = document.getElementById("slots");
+      container.innerHTML = "";
+
+      if (!selectedDate) return;
+
+      try {
+        const resSlots = await fetch("http://localhost:3000/creneaux");
+        allSlots = await resSlots.json();
+
+        const res = await fetch(`http://localhost:3000/disponibilites?date=${selectedDate}`);
+        const heuresPrises = await res.json();
+
+        const horairesDisponibles = allSlots.filter(h => !heuresPrises.includes(h));
+
+        if (horairesDisponibles.length === 0) {
+          container.innerHTML = "<p>⛔ Aucun créneau disponible pour cette date.</p>";
+          return;
+        }
+
+        horairesDisponibles.forEach((time) => {
+          const btn = document.createElement("button");
+          btn.textContent = time;
+          btn.className = "slot available";
+          btn.onclick = () => {
+            selectedTime = time;
+            document.querySelectorAll(".slot").forEach((b) => b.classList.remove("selected"));
+            btn.classList.add("selected");
+            document.getElementById("clientForm").style.display = "block";
+            document.getElementById("recapitulatif").style.display = "block";
+            updateRecap();
+          };
+          container.appendChild(btn);
+        });
+      } catch (err) {
+        console.error("❌ Erreur chargement des créneaux :", err);
+        container.innerHTML = "<p>⛔ Impossible de charger les créneaux disponibles.</p>";
+      }
+    }
+
+    function updateRecap() {
+      const name = document.getElementById("clientName").value.trim();
+      const phone = document.getElementById("clientPhone").value.trim();
+      const coiffure = document.getElementById("coiffureType").value;
+
+      document.getElementById("recapText").innerHTML = `
+        📅 <strong>Date :</strong> ${selectedDate || "(à choisir)"}<br>
+        🕒 <strong>Heure :</strong> ${selectedTime || "(à choisir)"}<br>
+        👤 <strong>Nom :</strong> ${name || "(à remplir)"}<br>
+        📞 <strong>Téléphone :</strong> ${phone ? "+1" + phone : "(à remplir)"}<br>
+        💇‍♀️ <strong>Coiffure :</strong> ${coiffure || "(à choisir)"}
+      `;
+    }
+
+    function submitForm(event) {
+      event.preventDefault();
+
+      const name = document.getElementById("clientName").value.trim();
+      const phone = "+1" + document.getElementById("clientPhone").value.trim();
+      const coiffure = document.getElementById("coiffureType").value;
+      const phoneRegex = /^\+1[0-9]{10}$/;
+
+      if (!selectedDate || !selectedTime) {
+        alert("⛔ Veuillez sélectionner une date et une heure.");
+        return;
+      }
+
+      if (!name || !phone || !coiffure) {
+        alert("⛔ Tous les champs doivent être remplis.");
+        return;
+      }
+
+      if (!phoneRegex.test(phone)) {
+        alert("⛔ Numéro de téléphone invalide. Format attendu : +1XXXXXXXXXX");
+        return;
+      }
+
+      const reservationData = {
+        nom: name,
+        date: selectedDate,
+        heure: selectedTime,
+        telephone: phone,
+        coiffure,
+      };
+
+      fetch("http://localhost:3000/notifier-mireille", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(reservationData),
+      })
+        .then((res) => {
+          if (res.ok) {
+            localStorage.setItem("heureReservation", selectedTime);
+            window.location.href = "confirmation.html";
+          } else {
+            alert("⛔ Erreur lors de l'enregistrement. Veuillez réessayer.");
+          }
+        })
+        .catch((err) => {
+          console.error("❌ Erreur réseau :", err);
+          alert("⛔ Impossible de contacter le serveur.");
+        });
+    }
+
+    window.onload = () => {
+      const today = new Date().toISOString().split("T")[0];
+      document.getElementById("date").setAttribute("min", today);
+    };
+  </script>
+</body>
+</html>
