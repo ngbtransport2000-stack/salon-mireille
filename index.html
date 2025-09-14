@@ -60,10 +60,10 @@
       if (!selectedDate) return;
 
       try {
-        const resSlots = await fetch("http://localhost:3000/creneaux");
+        const resSlots = await fetch("https://mira-55g4.onrender.com /creneaux");
         allSlots = await resSlots.json();
 
-        const res = await fetch(`http://localhost:3000/disponibilites?date=${selectedDate}`);
+        const res = await fetch(`https://mira-55g4.onrender.com/disponibilites?date=${selectedDate}`);
         const heuresPrises = await res.json();
 
         const horairesDisponibles = allSlots.filter(h => !heuresPrises.includes(h));
@@ -138,7 +138,7 @@
         coiffure,
       };
 
-      fetch("http://localhost:3000/notifier-mireille", {
+      fetch("https://mira-55g4.onrender.com/notifier-mireille", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(reservationData),
